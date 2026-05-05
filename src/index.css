@@ -1,0 +1,115 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+  }
+}
+
+@layer components {
+  /* ── Base input (theme-aware radius + focus) ── */
+  .input-base {
+    @apply w-full border border-gray-300 px-4 py-2.5 text-sm shadow-sm transition
+           focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100;
+    border-radius: var(--input-radius, 0.5rem);
+  }
+  [data-theme] .input-base:focus {
+    border-color: var(--theme-color);
+    box-shadow: 0 0 0 2px var(--theme-color-ring);
+  }
+  .input-error {
+    @apply border-red-400;
+  }
+  [data-theme] .input-error:focus {
+    border-color: #f87171;
+    box-shadow: 0 0 0 2px rgba(248,113,113,0.3);
+  }
+  .label-base {
+    @apply mb-1.5 block text-sm font-medium text-gray-700;
+  }
+
+  /* ── Font from CSS variable ── */
+  [data-theme] {
+    font-family: var(--font-family, Inter, ui-sans-serif, system-ui);
+  }
+
+  /* ── Form card (radius driven by CSS var) ── */
+  .form-card {
+    border-radius: var(--card-radius, 0.75rem);
+  }
+
+  /* ── Theme-driven colours ── */
+  [data-theme] .t-btn {
+    background-color: var(--theme-color);
+    color: white;
+    transition: filter 0.15s;
+  }
+  [data-theme] .t-btn:hover:not(:disabled) { filter: brightness(90%); }
+  [data-theme] .t-btn:disabled             { opacity: 0.5; cursor: not-allowed; }
+  [data-theme] .t-progress-fill            { background-color: var(--theme-color); }
+  [data-theme] .t-step-active              { background-color: var(--theme-color); color: white; }
+  [data-theme] .t-step-border              { border-color: var(--theme-color); color: var(--theme-color); }
+  [data-theme] .t-text                     { color: var(--theme-color); }
+  [data-theme] .t-light-bg                 { background-color: var(--theme-color-light); }
+
+  /* ══ Style: minimal ══ */
+  [data-style="minimal"] .form-card {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  [data-style="minimal"] .input-base {
+    background-color: white;
+  }
+
+  /* ══ Style: glass ══ */
+  [data-style="glass"] .form-card {
+    background: rgba(255,255,255,0.60) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    border: 1px solid rgba(255,255,255,0.45) !important;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.20) !important;
+  }
+  [data-style="glass"] .input-base {
+    background-color: rgba(255,255,255,0.75);
+  }
+  [data-style="glass"] .progress-track {
+    background-color: rgba(255,255,255,0.35);
+  }
+
+  /* ══ Style: dark ══ */
+  [data-style="dark"] .form-card {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #e2e8f0;
+  }
+  [data-style="dark"] .label-base    { color: #cbd5e1; }
+  [data-style="dark"] .input-base {
+    background-color: #0f172a;
+    border-color: #475569;
+    color: #f1f5f9;
+  }
+  [data-style="dark"] .input-base:focus {
+    border-color: var(--theme-color);
+    box-shadow: 0 0 0 2px var(--theme-color-ring);
+  }
+  [data-style="dark"] .input-base::placeholder { color: #64748b; }
+  [data-style="dark"] select option            { background-color: #1e293b; }
+
+  /* ══ Card layout animations ══ */
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(48px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-48px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .card-enter-right { animation: slideInRight 0.28s cubic-bezier(0.16,1,0.3,1); }
+  .card-enter-left  { animation: slideInLeft  0.28s cubic-bezier(0.16,1,0.3,1); }
+}
