@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const client = axios.create({ baseURL: 'https://leg-reservations-ken-solving.trycloudflare.com/forms/api' })
+const client = axios.create({ baseURL: 'https://supplemental-introductory-structures-cherry.trycloudflare.com/forms/api' })
 
 client.interceptors.request.use((config) => {
   const credentials = localStorage.getItem('credentials')
@@ -23,6 +23,6 @@ export function hasCredentials() {
 }
 
 // No auth header — used for public share endpoints
-  export const publicClient = axios.create({ baseURL: 'https://leg-reservations-ken-solving.trycloudflare.com/forms/api/' })
+  export const publicClient = axios.create({ baseURL: 'https://supplemental-introductory-structures-cherry.trycloudflare.com/forms/api' })
 
 export default client
