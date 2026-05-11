@@ -107,17 +107,33 @@ export default function FieldCard({ field, isFirst, isLast, allFields, onChange,
         <div className="space-y-5 border-t border-gray-100 px-5 py-5">
 
           {/* Type + Label */}
-          <div>
-            <label className="label-base">
-              Label <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={field.label}
-              onChange={(e) => onChange({ label: e.target.value })}
-              placeholder="e.g. Full Name"
-              className="input-base"
-            />
+          <div className={`grid gap-4 ${!field.label ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            {!field.label && (
+              <div>
+                <label className="label-base">Field Type</label>
+                <select
+                  value={field.type}
+                  onChange={(e) => onChange({ type: e.target.value, options: [], validations: [] })}
+                  className="input-base bg-white"
+                >
+                  {FIELD_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div>
+              <label className="label-base">
+                Label <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={field.label}
+                onChange={(e) => onChange({ label: e.target.value })}
+                placeholder="e.g. Full Name"
+                className="input-base"
+              />
+            </div>
           </div>
 
           {/* Placeholder + Required */}
