@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import Button from './ui/Button'
 
 const NAV_LINKS = [
-  { to: '/',          label: 'Forms',     key: 'forms'     },
+  { to: '/forms',     label: 'Forms',     key: 'forms'     },
   { to: '/dashboard', label: 'Dashboard', key: 'dashboard' },
   { to: '/profile',   label: 'Profile',   key: 'profile'   },
 ]

@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import Footer           from './components/Footer'
+import LandingPage      from './pages/LandingPage'
 import LoginPage        from './pages/LoginPage'
 import FormsListPage    from './pages/FormsListPage'
 import FormPage         from './pages/FormPage'
@@ -19,8 +21,9 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          <Route path="/"      element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={
+          <Route path="/forms" element={
             <ProtectedRoute><FormsListPage /></ProtectedRoute>
           } />
           <Route path="/forms/:id" element={
@@ -46,6 +49,7 @@ export default function App() {
           <Route path="/share/:id/success" element={<SuccessPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <Footer />
       </BrowserRouter>
     </AuthProvider>
   )

@@ -21,7 +21,7 @@ export default function LoginPage() {
     login(username, password)
     try {
       await client.get('/user/me/')
-      navigate('/')
+      navigate('/forms')
     } catch {
       setError('Invalid username or password.')
       login('', '')
