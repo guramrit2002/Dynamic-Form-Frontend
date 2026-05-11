@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth }   from '../context/AuthContext'
 import client        from '../api/client'
@@ -109,31 +109,55 @@ const STATUS_FILTERS = [
   { key: 'draft',     label: 'Draft' },
 ]
 
+const PAGE_SIZE = 10
+
 export default function FormsListPage() {
   const { logout } = useAuth()
   const navigate   = useNavigate()
 
-  const [forms,   setForms]   = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState('')
-  const [search,  setSearch]  = useState('')
-  const [status,  setStatus]  = useState('all')
-  const [view,    setView]    = useState(() => localStorage.getItem('forms_view') ?? 'list')
+  const [forms,           setForms]           = useState([])
+  const [totalCount,      setTotalCount]      = useState(0)
+  const [page,            setPage]            = useState(1)
+  const [loading,         setLoading]         = useState(true)
+  const [error,           setError]           = useState('')
+  const [search,          setSearch]          = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [status,          setStatus]          = useState('all')
+  const [view,            setView]            = useState(() => localStorage.getItem('forms_view') ?? 'list')
 
   useEffect(() => {
-    client.get('/builder/forms/')
-      .then((r) => setForms(r.data))
+    const t = setTimeout(() => { setDebouncedSearch(search); setPage(1) }, 300)
+    return () => clearTimeout(t)
+  }, [search])
+
+  useEffect(() => {
+    setLoading(true)
+    setError('')
+    const params = new URLSearchParams({ page })
+    if (debouncedSearch) params.set('search', debouncedSearch)
+    if (status !== 'all') params.set('status', status)
+    client.get(`/builder/forms/?${params}`)
+      .then((r) => { setForms(r.data.results); setTotalCount(r.data.count) })
       .catch(() => setError('Failed to load forms.'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [page, debouncedSearch, status])
 
   function toggleView(v) { setView(v); localStorage.setItem('forms_view', v) }
 
-  const filtered = useMemo(() => forms.filter((f) => {
-    const matchSearch = f.name.toLowerCase().includes(search.toLowerCase())
-    const matchStatus = status === 'all' || (status === 'published' && f.is_published) || (status === 'draft' && !f.is_published)
-    return matchSearch && matchStatus
-  }), [forms, search, status])
+  function handleStatusChange(key) {
+    setStatus(key)
+    setPage(1)
+  }
+
+  function clearFilters() {
+    setSearch('')
+    setDebouncedSearch('')
+    setStatus('all')
+    setPage(1)
+  }
+
+  const totalPages  = Math.ceil(totalCount / PAGE_SIZE)
+  const isFiltering = !!(debouncedSearch || status !== 'all')
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -150,11 +174,13 @@ export default function FormsListPage() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">My Forms</h1>
-          <p className="mt-0.5 text-sm text-gray-500">{forms.length} form{forms.length !== 1 ? 's' : ''} total</p>
+          {!loading && (
+            <p className="mt-0.5 text-sm text-gray-500">{totalCount} form{totalCount !== 1 ? 's' : ''} total</p>
+          )}
         </div>
 
         {/* Toolbar */}
-        {!loading && !error && forms.length > 0 && (
+        {!loading && !error && (totalCount > 0 || isFiltering) && (
           <div className="mb-6 flex flex-wrap items-center gap-3">
             <div className="relative w-full min-w-0 sm:flex-1 sm:min-w-48">
               <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center"><SearchIcon /></span>
@@ -162,23 +188,17 @@ export default function FormsListPage() {
                 placeholder="Search forms…"
                 className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-4 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30" />
               {search && (
-                <button onClick={() => setSearch('')}
+                <button onClick={() => { setSearch(''); setDebouncedSearch(''); setPage(1) }}
                   className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600">✕</button>
               )}
             </div>
 
             <div className="flex overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm">
               {STATUS_FILTERS.map((f) => (
-                <button key={f.key} onClick={() => setStatus(f.key)}
+                <button key={f.key} onClick={() => handleStatusChange(f.key)}
                   className={`px-4 py-2 text-sm font-medium transition
                     ${status === f.key ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>
                   {f.label}
-                  {f.key !== 'all' && (
-                    <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs
-                      ${status === f.key ? 'bg-indigo-500 text-indigo-100' : 'bg-gray-100 text-gray-500'}`}>
-                      {forms.filter(fm => f.key === 'published' ? fm.is_published : !fm.is_published).length}
-                    </span>
-                  )}
                 </button>
               ))}
             </div>
@@ -198,7 +218,8 @@ export default function FormsListPage() {
         {/* States */}
         {loading && <div className="flex justify-center py-20"><Spinner className="h-8 w-8 text-indigo-600" /></div>}
         {error && <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
-        {!loading && !error && forms.length === 0 && (
+
+        {!loading && !error && totalCount === 0 && !isFiltering && (
           <div className="rounded-xl border border-dashed border-gray-300 bg-white py-20 text-center">
             <p className="text-gray-400">No forms yet.</p>
             <button onClick={() => navigate('/builder/new')} className="mt-3 text-sm font-medium text-indigo-600 hover:underline">
@@ -206,28 +227,51 @@ export default function FormsListPage() {
             </button>
           </div>
         )}
-        {!loading && !error && forms.length > 0 && filtered.length === 0 && (
+
+        {!loading && !error && forms.length === 0 && isFiltering && (
           <div className="rounded-xl border border-dashed border-gray-200 bg-white py-16 text-center">
             <p className="text-gray-400">No forms match your search.</p>
-            <button onClick={() => { setSearch(''); setStatus('all') }} className="mt-2 text-sm font-medium text-indigo-600 hover:underline">
+            <button onClick={clearFilters} className="mt-2 text-sm font-medium text-indigo-600 hover:underline">
               Clear filters
             </button>
           </div>
         )}
 
-        {!loading && filtered.length > 0 && view === 'list' && (
-          <ul className="hidden sm:block space-y-4">{filtered.map((form) => <ListRow key={form.id} form={form} />)}</ul>
+        {!loading && forms.length > 0 && view === 'list' && (
+          <ul className="hidden sm:block space-y-4">{forms.map((form) => <ListRow key={form.id} form={form} />)}</ul>
         )}
-        {!loading && filtered.length > 0 && (
+        {!loading && forms.length > 0 && (
           <div className={`grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3${view === 'list' ? ' sm:hidden' : ''}`}>
-            {filtered.map((form) => <GridCard key={form.id} form={form} />)}
+            {forms.map((form) => <GridCard key={form.id} form={form} />)}
           </div>
         )}
-        {!loading && forms.length > 0 && (search || status !== 'all') && filtered.length > 0 && (
-          <p className="mt-4 text-center text-xs text-gray-400">Showing {filtered.length} of {forms.length} forms</p>
+
+        {/* Pagination */}
+        {!loading && totalPages > 1 && (
+          <div className="mt-6 flex items-center justify-between">
+            <p className="text-xs text-gray-400">
+              Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalCount)} of {totalCount}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage((p) => p - 1)}
+                disabled={page === 1}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-600 shadow-sm transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                ← Prev
+              </button>
+              <span className="text-sm text-gray-500">{page} / {totalPages}</span>
+              <button
+                onClick={() => setPage((p) => p + 1)}
+                disabled={page === totalPages}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-600 shadow-sm transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Next →
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>
   )
 }
-

@@ -58,16 +58,9 @@ export default function PublicFormPage() {
             F
           </div>
           {form && (
-            <>
-              <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                {form.name}
-              </h1>
-              {form.schema?.steps?.length > 1 && (
-                <p className={`mt-1 text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {form.schema.steps.length}-step form
-                </p>
-              )}
-            </>
+            <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              {form.name}
+            </h1>
           )}
         </div>
 

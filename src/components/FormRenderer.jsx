@@ -125,9 +125,11 @@ export default function FormRenderer({ form, submitFn, successPath, pageWrapper 
   // Buttons shown in classic layout
   const classicFooter = (
     <div className="flex items-center justify-between">
-      <Button variant="secondary" onClick={handleBack} disabled={isFirstStep || submitting}>
-        ← Back
-      </Button>
+      {steps.length > 1 && (
+        <Button variant="secondary" onClick={handleBack} disabled={isFirstStep || submitting}>
+          ← Back
+        </Button>
+      )}
       <button
         onClick={submit}
         disabled={submitting}
@@ -141,7 +143,7 @@ export default function FormRenderer({ form, submitFn, successPath, pageWrapper 
 
   const inner = (
     <ThemeProvider design={design}>
-      <ProgressBar steps={steps} currentStepId={currentStepId} />
+      {steps.length > 1 && <ProgressBar steps={steps} currentStepId={currentStepId} />}
 
       <FormCard
         style={design.style}
