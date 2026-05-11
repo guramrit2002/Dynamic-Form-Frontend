@@ -137,7 +137,16 @@ export default function FormsListPage() {
     if (debouncedSearch) params.set('search', debouncedSearch)
     if (status !== 'all') params.set('status', status)
     client.get(`/builder/forms/?${params}`)
-      .then((r) => { setForms(r.data.results); setTotalCount(r.data.count) })
+      .then((r) => {
+        const data = r.data
+        if (Array.isArray(data)) {
+          setForms(data)
+          setTotalCount(data.length)
+        } else {
+          setForms(data.results ?? [])
+          setTotalCount(data.count ?? 0)
+        }
+      })
       .catch(() => setError('Failed to load forms.'))
       .finally(() => setLoading(false))
   }, [page, debouncedSearch, status])
